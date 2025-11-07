@@ -1,0 +1,39 @@
+# Git Hooks Configuration
+
+# Pre-commit hook to validate conventional commits
+
+# Instalar con: npx husky install && npx husky add .husky/commit-msg 'npx commitlint --edit $1'
+
+# Conventional Commit Types:
+
+# feat: Nueva funcionalidad
+
+# fix: Corrección de bug
+
+# docs: Cambios en documentación
+
+# style: Cambios que no afectan el código (espacios, formato, etc)
+
+# refactor: Refactorización de código
+
+# perf: Mejoras de performance
+
+# test: Agregar o corregir tests
+
+# chore: Cambios en build, dependencias, etc
+
+# Scopes recomendados:
+
+# inventory, scanner, sync, reports, notifications, ui, api, db, pwa, config
+
+# Ejemplos:
+
+# feat(scanner): add barcode detection with ZXing
+
+# fix(sync): resolve offline queue duplicate entries
+
+# docs(api): add JSDoc to inventory service methods
+
+# refactor(services): extract prediction logic to separate service
+
+# test(inventory): add unit tests for restock calculations

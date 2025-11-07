@@ -1,0 +1,5 @@
+- Funciones: camelCase
+- Componentes: PascalCase
+- Constantes: SCREAMING_SNAKE_CASE
+- Máx 50 líneas por función
+- Máx 500 líneas por archivo
