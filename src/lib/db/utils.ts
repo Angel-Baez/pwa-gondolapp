@@ -150,10 +150,10 @@ export const calculateEstimatedTime = (items: RestockItem[]): number => {
   // Tiempo adicional por cambio de sección
   let currentSection = '';
   for (const item of items) {
-    if (currentSection && currentSection !== item.zona.section) {
+    if (currentSection && currentSection !== item.physicalZone) {
       totalTime += 3; // 3 minutos para cambiar de sección
     }
-    currentSection = item.zona.section;
+    currentSection = item.physicalZone;
   }
 
   return totalTime;
@@ -197,7 +197,7 @@ export const isLowStock = (currentStock: number, minStock: number): boolean => {
  * Calcular valor total de inventario para una variante
  */
 export const calculateVariantValue = (variant: ProductVariant): number => {
-  return variant.stock * variant.cost;
+  return variant.currentStock * variant.costPrice;
 };
 
 /**
@@ -228,7 +228,7 @@ export const searchProducts = (
       product.variants.some(
         variant =>
           variant.barcode.includes(query) ||
-          variant.sku.toLowerCase().includes(lowerQuery) ||
+          variant.sku?.toLowerCase().includes(lowerQuery) ||
           variant.size.toLowerCase().includes(lowerQuery)
       )
   );
@@ -294,19 +294,19 @@ export const validateProduct = (product: Partial<Product>): string[] => {
         errors.push(`Variante ${index + 1}: Unidad es requerida`);
       }
 
-      if (variant.price <= 0) {
+      if (variant.salePrice <= 0) {
         errors.push(`Variante ${index + 1}: Precio debe ser mayor a 0`);
       }
 
-      if (variant.cost <= 0) {
+      if (variant.costPrice <= 0) {
         errors.push(`Variante ${index + 1}: Costo debe ser mayor a 0`);
       }
 
-      if (variant.stock < 0) {
+      if (variant.currentStock < 0) {
         errors.push(`Variante ${index + 1}: Stock no puede ser negativo`);
       }
 
-      if (variant.stockMinimo < 0) {
+      if (variant.minStock < 0) {
         errors.push(
           `Variante ${index + 1}: Stock mínimo no puede ser negativo`
         );
@@ -349,7 +349,7 @@ export const validateRestockList = (
         errors.push(`Item ${index + 1}: Código de barras es requerido`);
       }
 
-      if (item.quantity <= 0) {
+      if (item.targetQuantity <= 0) {
         errors.push(`Item ${index + 1}: Cantidad debe ser mayor a 0`);
       }
 

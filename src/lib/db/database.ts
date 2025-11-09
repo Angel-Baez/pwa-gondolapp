@@ -3,28 +3,39 @@ import type {
   Product,
   RestockList,
   SyncOperation,
-  ProductStats,
+  InventoryMovement,
 } from '@/types/inventory.types';
 
 /**
+ * Interfaz Database para compatibilidad con repositories
+ */
+export interface Database extends Dexie {
+  products: Table<Product, string>;
+  restockLists: Table<RestockList, string>;
+  inventoryMovements: Table<InventoryMovement, string>;
+  syncOperations: Table<SyncOperation, string>;
+}
+
+/**
  * Cliente IndexedDB para GondolApp PWA
- * Implementa la estrategia offline-first con tres stores principales:
+ * Implementa la estrategia offline-first con stores principales:
  * - products: Catálogo local sincronizado con MongoDB
  * - restockLists: Listas de reposición (solo local)
- * - pendingSync: Cola de operaciones para sincronizar
+ * - inventoryMovements: Movimientos de inventario
+ * - syncOperations: Cola de operaciones para sincronizar
  */
-export class GondolAppDB extends Dexie {
+export class GondolAppDB extends Dexie implements Database {
   // Store para catálogo de productos (sincronizado)
-  products!: Table<Product>;
+  products!: Table<Product, string>;
 
   // Store para listas de reposición (solo local)
-  restockLists!: Table<RestockList>;
+  restockLists!: Table<RestockList, string>;
+
+  // Store para movimientos de inventario
+  inventoryMovements!: Table<InventoryMovement, string>;
 
   // Store para cola de sincronización
-  pendingSync!: Table<SyncOperation>;
-
-  // Store para estadísticas de productos (cache local)
-  productStats!: Table<ProductStats>;
+  syncOperations!: Table<SyncOperation, string>;
 
   constructor() {
     super('GondolAppDB');
@@ -32,17 +43,17 @@ export class GondolAppDB extends Dexie {
     this.version(1).stores({
       // Products: índices para búsquedas eficientes
       products:
-        '++_id, baseProduct, brand, category.level1, category.level2, category.level3, isActive, createdAt, updatedAt',
+        '++_id, sku, baseProduct, brand, category.level1, category.level2, category.level3, isActive, needsSync, createdAt, updatedAt',
 
       // RestockLists: índices para filtrado por fecha y estado
-      restockLists: '++_id, name, createdAt, completedAt, createdBy',
+      restockLists:
+        '++_id, name, userId, status, createdAt, updatedAt, completedAt',
 
-      // PendingSync: índices para procesamiento de cola
-      pendingSync: '++_id, type, timestamp, retries, priority',
+      // InventoryMovements: índices para movimientos
+      inventoryMovements: '++_id, variantId, type, timestamp, userId',
 
-      // ProductStats: índices para análisis
-      productStats:
-        '++variantId, totalMovements, daysOfStock, turnoverRate, lastMovementDate',
+      // SyncOperations: índices para procesamiento de cola
+      syncOperations: '++_id, type, timestamp, synced, retries',
     });
 
     // Configurar hooks para validación y consistencia
@@ -86,15 +97,12 @@ export class GondolAppDB extends Dexie {
 
       // Ordenar items por zona física
       obj.items = obj.items.sort((a, b) => {
-        if (a.zona.section !== b.zona.section) {
-          return a.zona.section.localeCompare(b.zona.section);
-        }
-        return a.zona.sortOrder - b.zona.sortOrder;
+        return (a.physicalZone || '').localeCompare(b.physicalZone || '');
       });
     });
 
     // Hook para operaciones de sincronización
-    this.pendingSync.hook('creating', (_primKey, obj) => {
+    this.syncOperations.hook('creating', (_primKey: any, obj: any) => {
       if (!obj.priority) {
         obj.priority = 1; // Prioridad media por defecto
       }

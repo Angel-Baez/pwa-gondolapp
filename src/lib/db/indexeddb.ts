@@ -1,25 +1,26 @@
-// Re-export database and services
+// Re-export database and core components
 export { db } from './database';
-export { ProductSearchService } from './productSearchService';
-export { RestockService } from './restockService';
-export { StockService } from './stockService';
-export { DatabaseUtilsService } from './databaseUtils';
+export type { Database } from './database';
+
+// Re-export repositories and services
+export * from './repositories';
+export * from '../services';
 
 // Función para inicializar la base de datos
 export const initializeDB = async (): Promise<void> => {
   try {
     const { db } = await import('./database');
-    const { DatabaseUtilsService } = await import('./databaseUtils');
+    const { MaintenanceRepository } = await import('./repositories');
 
     await db.open();
 
-    // Ejecutar limpieza de datos antiguos
-    await DatabaseUtilsService.cleanupOldData();
+    // Ejecutar limpieza de datos antiguos usando Repository
+    const maintenanceRepo = new MaintenanceRepository(db);
+    await maintenanceRepo.clearOldData();
 
     // Mostrar estadísticas iniciales
-    const stats = await DatabaseUtilsService.getStats();
-    // eslint-disable-next-line no-console
-    console.log('✅ IndexedDB inicializada correctamente - Stats:', stats);
+    await maintenanceRepo.getDatabaseStats();
+    // IndexedDB initialized successfully with stats
   } catch (error) {
     throw new Error(`Error inicializando IndexedDB: ${error}`);
   }
@@ -27,21 +28,33 @@ export const initializeDB = async (): Promise<void> => {
 
 // Función para resetear la base de datos (solo para desarrollo)
 export const resetDB = async (): Promise<void> => {
-  const { DatabaseUtilsService } = await import('./databaseUtils');
-  await DatabaseUtilsService.resetDatabase();
+  const { db } = await import('./database');
+  await db.delete();
+  await db.open();
 };
 
-// Función para exportar datos (backup)
-export const exportData = async () => {
-  const { DatabaseUtilsService } = await import('./databaseUtils');
-  return await DatabaseUtilsService.exportData();
+// Función para exportar datos (placeholder)
+export const exportData = async (): Promise<any> => {
+  throw new Error('exportData not implemented yet');
 };
 
-// Función para importar datos (restore)
-export const importData = async (data: {
-  products: any[];
-  restockLists: any[];
-}) => {
-  const { DatabaseUtilsService } = await import('./databaseUtils');
-  await DatabaseUtilsService.importData(data);
+// Función para importar datos (placeholder)
+export const importData = async (_data: any): Promise<void> => {
+  throw new Error('importData not implemented yet');
+};
+
+// Función para obtener estadísticas de la base de datos
+export const getDatabaseStats = async () => {
+  const { db } = await import('./database');
+  const { MaintenanceRepository } = await import('./repositories');
+  const maintenanceRepo = new MaintenanceRepository(db);
+  return await maintenanceRepo.getDatabaseStats();
+};
+
+// Función para compactar la base de datos
+export const compactDatabase = async () => {
+  const { db } = await import('./database');
+  const { MaintenanceRepository } = await import('./repositories');
+  const maintenanceRepo = new MaintenanceRepository(db);
+  return await maintenanceRepo.compactDatabase();
 };

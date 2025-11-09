@@ -30,17 +30,20 @@ export interface PhysicalZone {
  * Cada variante representa un SKU específico
  */
 export interface ProductVariant {
-  variantId: string; // UUID único
+  _id: string; // UUID único
+  name: string; // Nombre de la variante
   barcode: string; // Código de barras EAN-13/EAN-8
-  sku: string; // Auto-generado: {first10digits}-{A/B/C}
+  sku?: string; // Auto-generado: {first10digits}-{A/B/C}
   size: string; // Ej: "1L", "500ml", "2kg"
-  unit: string; // Ej: "unidad", "kg", "litro"
-  price: number; // Precio unitario
-  cost: number; // Costo de compra
-  stock: number; // Stock actual
-  stockMinimo: number; // Stock mínimo para alertas
+  unit: 'kg' | 'lt' | 'un' | 'gr' | 'ml'; // Unidades estandarizadas
+  costPrice: number; // Costo de compra
+  salePrice: number; // Precio de venta
+  currentStock: number; // Stock actual
+  minStock: number; // Stock mínimo para alertas
+  maxStock: number; // Stock máximo
+  reorderPoint: number; // Punto de reorden
   expirationDate?: Date; // Fecha de vencimiento (opcional)
-  zona: PhysicalZone; // Ubicación física
+  isActive: boolean; // Si la variante está activa
 }
 
 /**
@@ -49,14 +52,17 @@ export interface ProductVariant {
  */
 export interface Product {
   _id: string; // MongoDB ObjectId o UUID para IndexedDB
+  sku: string; // SKU del producto base
   baseProduct: string; // Ej: "Leche Milex"
   brand: string; // Ej: "Milex"
   name: string; // Ej: "Leche"
   description?: string; // Descripción opcional
   category: ProductCategory; // Categoría jerárquica
   variants: ProductVariant[]; // Array de variantes
+  physicalZone: string; // Zona física del producto
   imageUrl?: string; // URL de imagen del producto
   isActive: boolean; // Si el producto está activo
+  needsSync: boolean; // Si necesita sincronización
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,17 +75,19 @@ export interface Product {
  * Item en lista de reposición
  */
 export interface RestockItem {
+  _id: string; // UUID único
+  productId: string; // Referencia al Product
   variantId: string; // Referencia a ProductVariant
   barcode: string; // Para validación rápida
   productName: string; // Nombre del producto para display
-  size: string; // Tamaño de la variante
-  quantity: number; // Cantidad sugerida
-  actualQuantity?: number; // Cantidad real escaneada
-  zona: PhysicalZone; // Para ordenamiento por ubicación
-  priority: 'high' | 'medium' | 'low'; // Prioridad basada en stock
+  variantName: string; // Nombre de la variante
+  currentStock: number; // Stock actual
+  targetQuantity: number; // Cantidad objetivo
+  scannedQuantity: number; // Cantidad escaneada
+  priority: 'low' | 'medium' | 'high'; // Prioridad basada en stock
+  physicalZone: string; // Zona física para ordenamiento
   completed: boolean; // Si el item fue completado
   completedAt?: Date; // Timestamp de completado
-  notes?: string; // Notas adicionales
 }
 
 /**
@@ -88,13 +96,14 @@ export interface RestockItem {
 export interface RestockList {
   _id: string; // UUID único
   name: string; // Nombre de la lista
+  userId: string; // ID del usuario que creó la lista
+  status: 'active' | 'completed' | 'cancelled'; // Estado de la lista
   items: RestockItem[]; // Items ordenados por zona
+  totalItems: number; // Total de items en la lista
+  completedItems: number; // Items completados
   createdAt: Date;
+  updatedAt: Date;
   completedAt?: Date; // Si toda la lista fue completada
-  estimatedDuration?: number; // Duración estimada en minutos
-  actualDuration?: number; // Duración real
-  createdBy?: string; // Usuario que creó la lista
-  completedBy?: string; // Usuario que completó la lista
 }
 
 // ===============================
@@ -105,10 +114,10 @@ export interface RestockList {
  * Tipo de movimiento de inventario
  */
 export type MovementType =
-  | 'restock' // Reposición de mercadería
-  | 'discard' // Descarte por vencimiento/daño
-  | 'sale' // Venta (futuro)
   | 'adjustment' // Ajuste de inventario
+  | 'restock' // Reposición de mercadería
+  | 'sale' // Venta
+  | 'waste' // Descarte por vencimiento/daño
   | 'transfer'; // Transferencia entre ubicaciones
 
 /**
@@ -116,16 +125,15 @@ export type MovementType =
  */
 export interface InventoryMovement {
   _id: string; // UUID único
-  type: MovementType;
   variantId: string; // Referencia a ProductVariant
+  type: MovementType;
   quantity: number; // Cantidad (positiva o negativa)
+  previousStock: number; // Stock antes del movimiento
+  newStock: number; // Stock después del movimiento
   resultingStock: number; // Stock resultante después del movimiento
-  reason?: string; // Razón del movimiento
-  location?: string; // Ubicación donde ocurrió
+  reason: string; // Razón del movimiento
   timestamp: Date;
-  userId?: string; // Usuario que realizó el movimiento
-  batchId?: string; // Para agrupar movimientos relacionados
-  metadata?: Record<string, any>; // Datos adicionales
+  userId: string; // Usuario que realizó el movimiento
 }
 
 // ===============================
@@ -136,11 +144,9 @@ export interface InventoryMovement {
  * Tipo de operación de sincronización
  */
 export type SyncOperationType =
-  | 'product_create'
   | 'product_update'
-  | 'product_delete'
-  | 'movement'
-  | 'bulk_update';
+  | 'stock_adjustment'
+  | 'list_completion';
 
 /**
  * Operación pendiente de sincronización
@@ -150,10 +156,9 @@ export interface SyncOperation {
   type: SyncOperationType;
   data: any; // Datos de la operación
   timestamp: Date; // Cuando se creó la operación
+  synced: boolean; // Si ya fue sincronizada
   retries: number; // Número de reintentos
   lastError?: string; // Último error si falló
-  priority: number; // Prioridad de sincronización (0 = alta)
-  batchId?: string; // Para agrupar operaciones relacionadas
 }
 
 // ===============================
@@ -189,12 +194,13 @@ export interface ZoneConfiguration {
  */
 export interface ProductStats {
   variantId: string;
-  totalMovements: number;
-  averageStock: number;
-  daysOfStock: number; // Días de stock estimados
-  turnoverRate: number; // Rotación de inventario
+  productName: string;
+  variantName: string;
+  currentStock: number;
+  averageDailyUsage: number;
+  daysUntilStockout: number;
+  suggestedReorderQuantity: number;
   lastRestockDate?: Date;
-  lastMovementDate?: Date;
 }
 
 /**
@@ -203,11 +209,10 @@ export interface ProductStats {
 export interface InventorySummary {
   totalProducts: number;
   totalVariants: number;
-  totalValue: number; // Valor total del inventario
   lowStockCount: number;
-  expiringCount: number;
-  lastSyncDate?: Date;
-  healthScore: number; // Score de salud del inventario (0-100)
+  outOfStockCount: number;
+  totalValue: number; // Valor total del inventario
+  lastUpdated: Date;
 }
 
 // ===============================

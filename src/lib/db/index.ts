@@ -45,15 +45,11 @@ export {
   debounce,
 } from './utils';
 
-// Hooks personalizados
+// Funciones y utilidades principales
 export {
   useIndexedDB,
-  useProducts,
-  useRestockLists,
-  useStock,
   useInventoryStats,
-  useSync,
-  useMaintenance,
+  useIndexedDBMaintenance,
 } from '@/hooks/useIndexedDB';
 
 // Re-exportar tipos principales
