@@ -65,16 +65,16 @@ const stockSafetyFactor = 1.2; // Constante debe ser MAYÚSCULA
 
 ```typescript
 // ✅ Correcto - Colecciones
-products, movements, consumptionHistory, syncQueue;
+(products, movements, consumptionHistory, syncQueue);
 
 // ✅ Correcto - Campos
 {
-  baseProduct, expirationDate, stockMinimo, variantId;
+  (baseProduct, expirationDate, stockMinimo, variantId);
 }
 
 // ❌ Incorrecto
 {
-  base_product, expiration_date, stock_minimo, variant_id;
+  (base_product, expiration_date, stock_minimo, variant_id);
 }
 ```
 
@@ -217,9 +217,8 @@ class InventoryService {
 
   async createRestockList(categoryId?: string): Promise<RestockList> {
     const products = await this.productRepo.findByCategory(categoryId);
-    const suggestions = await this.predictionService.calculateSuggestions(
-      products
-    );
+    const suggestions =
+      await this.predictionService.calculateSuggestions(products);
 
     return new RestockList({
       items: suggestions,
@@ -237,11 +236,11 @@ class InventoryService {
 class ReportFactory {
   static createReport(type: ReportType, data: any[]): Report {
     switch (type) {
-      case "expiring-products":
+      case 'expiring-products':
         return new ExpiringProductsReport(data);
-      case "restock-suggestions":
+      case 'restock-suggestions':
         return new RestockSuggestionsReport(data);
-      case "top-restocked":
+      case 'top-restocked':
         return new TopRestockedReport(data);
       default:
         throw new Error(`Tipo de reporte no soportado: ${type}`);
@@ -262,13 +261,13 @@ class SyncService {
   }
 
   private notifyObservers(event: SyncEvent): void {
-    this.observers.forEach((observer) => observer.onSyncEvent(event));
+    this.observers.forEach(observer => observer.onSyncEvent(event));
   }
 
   async syncToServer(): Promise<void> {
-    this.notifyObservers({ type: "sync-start" });
+    this.notifyObservers({ type: 'sync-start' });
     // ... lógica de sincronización
-    this.notifyObservers({ type: "sync-complete" });
+    this.notifyObservers({ type: 'sync-complete' });
   }
 }
 ```
@@ -464,12 +463,12 @@ const ProductCard = ({ variant, priority }: ProductCardProps) => {
 module.exports = {
   theme: {
     screens: {
-      xs: "375px", // iPhone SE, móviles pequeños
-      sm: "640px", // Móviles grandes, tablets pequeñas
-      md: "768px", // Tablets
-      lg: "1024px", // Desktop pequeño
-      xl: "1280px", // Desktop grande
-      "2xl": "1536px", // Pantallas muy grandes
+      xs: '375px', // iPhone SE, móviles pequeños
+      sm: '640px', // Móviles grandes, tablets pequeñas
+      md: '768px', // Tablets
+      lg: '1024px', // Desktop pequeño
+      xl: '1280px', // Desktop grande
+      '2xl': '1536px', // Pantallas muy grandes
     },
   },
 };
@@ -501,12 +500,12 @@ module.exports = {
 
   .swipe-indicator::after {
     @apply absolute inset-y-0 right-0 w-1 bg-primary/20;
-    content: "";
+    content: '';
   }
 
   /* Estados de conectividad */
   .offline-indicator {
-    @apply bg-muted border-l-4 border-l-warning p-2 text-xs;
+    @apply border-l-4 border-l-warning bg-muted p-2 text-xs;
   }
 
   .sync-pulse {
@@ -551,7 +550,7 @@ const NavigationMenu = () => {
 /* Indicadores de estado accesibles */
 .status-critical {
   @apply bg-destructive text-destructive-foreground;
-  @apply before:content-['⚠️'] before:mr-1; /* Icono para usuarios con daltonismo */
+  @apply before:mr-1 before:content-['⚠️']; /* Icono para usuarios con daltonismo */
 }
 ```
 
@@ -564,20 +563,20 @@ const NavigationMenu = () => {
 class NativeAPIService {
   // Escaneo de códigos optimizado
   static async initBarcodeScanner() {
-    if ("BarcodeDetector" in window) {
+    if ('BarcodeDetector' in window) {
       return {
-        type: "native",
+        type: 'native',
         detector: new BarcodeDetector({
-          formats: ["ean_13", "ean_8", "code_128"],
+          formats: ['ean_13', 'ean_8', 'code_128'],
         }),
-        performance: "high", // ~5-10% CPU
+        performance: 'high', // ~5-10% CPU
       };
     } else {
-      const { BrowserMultiFormatReader } = await import("@zxing/browser");
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
       return {
-        type: "fallback",
+        type: 'fallback',
         detector: new BrowserMultiFormatReader(),
-        performance: "medium", // ~15-25% CPU
+        performance: 'medium', // ~15-25% CPU
       };
     }
   }
@@ -854,11 +853,11 @@ class NotificationService {
     message: string,
     channels: NotificationChannel[]
   ): Promise<void> {
-    const promises = channels.map((channel) => {
+    const promises = channels.map(channel => {
       switch (channel) {
-        case "push":
+        case 'push':
           return this.pushService.send(message);
-        case "email":
+        case 'email':
           return this.emailService.send(message);
         default:
           throw new Error(`Canal no soportado: ${channel}`);
@@ -1021,7 +1020,7 @@ const total = price * quantity; // Calcula el total multiplicando precio por can
 ```typescript
 // ✅ Correcto - Formato consistente
 const productVariants = await Promise.all(
-  barcodes.map(async (barcode) => {
+  barcodes.map(async barcode => {
     const variant = await productRepository.findByBarcode(barcode);
     return variant ? transformToVariantDto(variant) : null;
   })
@@ -1039,11 +1038,11 @@ const restockSuggestion: RestockSuggestion = {
 
 // Arrays: elementos en líneas separadas si es complejo
 const reportTypes: ReportType[] = [
-  "expiring-products",
-  "top-restocked",
-  "low-movement",
-  "low-stock",
-  "restock-suggestions",
+  'expiring-products',
+  'top-restocked',
+  'low-movement',
+  'low-stock',
+  'restock-suggestions',
 ];
 ```
 
@@ -1057,7 +1056,10 @@ export abstract class AppError extends Error {
   abstract readonly statusCode: number;
   abstract readonly isOperational: boolean;
 
-  constructor(message: string, public readonly context?: any) {
+  constructor(
+    message: string,
+    public readonly context?: any
+  ) {
     super(message);
     this.name = this.constructor.name;
   }
@@ -1104,7 +1106,7 @@ async function findProductByBarcode(
       : Err(new NotFoundError(`Producto no encontrado: ${barcode}`));
   } catch (error) {
     return Err(
-      new SyncError("Error accediendo a base de datos", { barcode, error })
+      new SyncError('Error accediendo a base de datos', { barcode, error })
     );
   }
 }
@@ -1153,7 +1155,7 @@ export class ErrorBoundary extends Component<
 
 ```typescript
 // lib/validations/product.schemas.ts
-import { z } from "zod";
+import { z } from 'zod';
 
 export const ProductVariantSchema = z.object({
   variantId: z.string().uuid(),
@@ -1199,13 +1201,13 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: error.errors },
+        { error: 'Datos inválidos', details: error.errors },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
@@ -1218,7 +1220,7 @@ export async function POST(request: Request) {
 
 ```typescript
 // lib/utils/sanitization.ts
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from 'isomorphic-dompurify';
 
 export const sanitizeInput = {
   text: (input: string): string => {
@@ -1227,11 +1229,11 @@ export const sanitizeInput = {
 
   barcode: (input: string): string => {
     // Solo números y letras, longitud 8-20
-    return input.replace(/[^a-zA-Z0-9]/g, "").substring(0, 20);
+    return input.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
   },
 
   number: (input: string): number | null => {
-    const num = parseFloat(input.replace(/[^0-9.-]/g, ""));
+    const num = parseFloat(input.replace(/[^0-9.-]/g, ''));
     return isNaN(num) ? null : num;
   },
 };
@@ -1245,17 +1247,17 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Headers de seguridad para PWA
-  response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=()"
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
   );
 
   // CSP específico para PWA
   response.headers.set(
-    "Content-Security-Policy",
+    'Content-Security-Policy',
     "default-src 'self'; " +
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // PWA necesita inline scripts
       "style-src 'self' 'unsafe-inline'; " +
@@ -1274,11 +1276,11 @@ export function middleware(request: NextRequest) {
 
 ```typescript
 // tests/services/InventoryService.test.ts
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { InventoryService } from "@/lib/services/InventoryService";
-import { createMockProductRepository } from "../__mocks__/repositories";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { InventoryService } from '@/lib/services/InventoryService';
+import { createMockProductRepository } from '../__mocks__/repositories';
 
-describe("InventoryService", () => {
+describe('InventoryService', () => {
   let inventoryService: InventoryService;
   let mockProductRepo: ReturnType<typeof createMockProductRepository>;
 
@@ -1287,8 +1289,8 @@ describe("InventoryService", () => {
     inventoryService = new InventoryService(mockProductRepo);
   });
 
-  describe("calculateRestockSuggestions", () => {
-    it("should suggest correct quantity for low stock items", async () => {
+  describe('calculateRestockSuggestions', () => {
+    it('should suggest correct quantity for low stock items', async () => {
       // Arrange
       const mockVariant = createMockVariant({
         stock: 5,
@@ -1299,16 +1301,16 @@ describe("InventoryService", () => {
 
       // Act
       const result = await inventoryService.calculateRestockSuggestions([
-        "variant-1",
+        'variant-1',
       ]);
 
       // Assert
       expect(result).toHaveLength(1);
       expect(result[0].suggestedQuantity).toBeCloseTo(35); // (11.25 * 3 * 1.2) - 5
-      expect(mockProductRepo.findById).toHaveBeenCalledWith("variant-1");
+      expect(mockProductRepo.findById).toHaveBeenCalledWith('variant-1');
     });
 
-    it("should handle variants with no consumption history", async () => {
+    it('should handle variants with no consumption history', async () => {
       // Arrange
       const mockVariant = createMockVariant({
         stock: 5,
@@ -1319,7 +1321,7 @@ describe("InventoryService", () => {
 
       // Act
       const result = await inventoryService.calculateRestockSuggestions([
-        "variant-1",
+        'variant-1',
       ]);
 
       // Assert
@@ -1621,34 +1623,29 @@ Sprint 5+: Mantener cobertura, agregar regression tests
 #### Para Features
 
 - [ ] **Funcionalidad**
-
   - [ ] Requisitos funcionales implementados completamente
   - [ ] Casos edge manejados apropiadamente
   - [ ] Funciona offline (crítico para PWA)
 
 - [ ] **Calidad de Código**
-
   - [ ] Código reviewed y aprobado por al menos 1 dev
   - [ ] Sigue convenciones de naming y estructura
   - [ ] No duplicación innecesaria (DRY)
   - [ ] Funciones < 50 líneas, archivos < 500 líneas
 
 - [ ] **Testing**
-
   - [ ] Unit tests con cobertura ≥ 80%
   - [ ] Integration tests para APIs críticas
   - [ ] Tests E2E para flujo principal
   - [ ] Todos los tests pasando en CI
 
 - [ ] **Performance**
-
   - [ ] Lighthouse score ≥ 90 en mobile
   - [ ] First Contentful Paint < 2s
   - [ ] Largest Contentful Paint < 4s
   - [ ] No memory leaks detectados
 
 - [ ] **Documentación**
-
   - [ ] JSDoc en funciones públicas
   - [ ] README actualizado si es necesario
   - [ ] API documentation actualizada
@@ -1663,7 +1660,6 @@ Sprint 5+: Mantener cobertura, agregar regression tests
 #### Para Bug Fixes
 
 - [ ] **Corrección**
-
   - [ ] Root cause identificado y documentado
   - [ ] Fix implementado sin side effects
   - [ ] Regresion tests agregados
@@ -1694,8 +1690,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
+          cache: 'npm'
 
       - run: npm ci
       - run: npm run lint

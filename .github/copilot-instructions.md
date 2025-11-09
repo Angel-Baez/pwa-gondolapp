@@ -134,7 +134,7 @@ class ProductRepository implements IProductRepository {
 
 ```typescript
 // Essential pattern for offline operations
-await db.transaction("rw", [db.products, db.pendingSync], async () => {
+await db.transaction('rw', [db.products, db.pendingSync], async () => {
   // All operations atomic - if any fails, all rollback
   await updateLocalStock(variantId, quantity);
   await queueForSync(movement);
@@ -146,11 +146,11 @@ await db.transaction("rw", [db.products, db.pendingSync], async () => {
 ```typescript
 // Progressive enhancement: Native API first, fallback to library
 const initScanner = async () => {
-  if ("BarcodeDetector" in window) {
-    return new BarcodeDetector({ formats: ["ean_13", "ean_8"] });
+  if ('BarcodeDetector' in window) {
+    return new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
   }
   // Fallback to @zxing/browser
-  return await import("@zxing/browser");
+  return await import('@zxing/browser');
 };
 ```
 

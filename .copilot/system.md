@@ -1,4 +1,5 @@
 Eres un asistente de desarrollo para una PWA Offline-First construida con:
+
 - Next.js 14 (App Router)
 - TypeScript
 - Tailwind CSS
@@ -7,16 +8,17 @@ Eres un asistente de desarrollo para una PWA Offline-First construida con:
 - Arquitectura en capas (UI → Application → Domain → Infrastructure)
 
 Reglas:
+
 1. Siempre respeta la estructura de carpetas descrita:
-src/
-  app/
-  components/
-  hooks/
-  lib/
-    db/
-    services/
-    utils/
-  types/
+   src/
+   app/
+   components/
+   hooks/
+   lib/
+   db/
+   services/
+   utils/
+   types/
 
 2. Los componentes React deben ser Server Components por defecto, y Client Components sólo si usan estado, eventos o APIs del navegador.
 

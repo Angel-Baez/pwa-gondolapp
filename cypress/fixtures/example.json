@@ -1,0 +1,68 @@
+{
+  "products": [
+    {
+      "barcode": "1234567890123",
+      "name": "Leche Entera La Serenísima",
+      "brand": "La Serenísima",
+      "category": {
+        "level1": "Lácteos",
+        "level2": "Leches",
+        "level3": "Entera"
+      },
+      "size": "1L",
+      "price": 450.0,
+      "stock": 25,
+      "minStock": 10
+    },
+    {
+      "barcode": "9876543210987",
+      "name": "Pan de Molde Integral",
+      "brand": "Bimbo",
+      "category": {
+        "level1": "Panadería",
+        "level2": "Panes",
+        "level3": "Integral"
+      },
+      "size": "500g",
+      "price": 380.0,
+      "stock": 5,
+      "minStock": 15
+    }
+  ],
+  "movements": [
+    {
+      "id": "mov-001",
+      "barcode": "1234567890123",
+      "type": "entrada",
+      "quantity": 10,
+      "timestamp": "2025-11-07T10:30:00Z",
+      "reason": "Reposición semanal"
+    },
+    {
+      "id": "mov-002",
+      "barcode": "9876543210987",
+      "type": "salida",
+      "quantity": 2,
+      "timestamp": "2025-11-07T14:15:00Z",
+      "reason": "Venta"
+    }
+  ],
+  "restockList": {
+    "id": "list-2025-11-07",
+    "date": "2025-11-07",
+    "items": [
+      {
+        "barcode": "9876543210987",
+        "name": "Pan de Molde Integral",
+        "currentStock": 5,
+        "minStock": 15,
+        "quantityNeeded": 18,
+        "zone": "Panadería - Estante Central",
+        "completed": false
+      }
+    ],
+    "totalItems": 1,
+    "completedItems": 0,
+    "estimatedTime": 5
+  }
+}

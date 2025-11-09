@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# PWA manifest
+Allow: /manifest.json
+Allow: /sw.js
+Allow: /workbox-*.js
+
+# Static assets
+Allow: /icons/
+Allow: /images/
+
+Sitemap: https://gondolapp.vercel.app/sitemap.xml

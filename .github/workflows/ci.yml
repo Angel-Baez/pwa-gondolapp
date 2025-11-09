@@ -1,0 +1,183 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job principal de testing y calidad de código
+  test:
+    name: Tests y Calidad de Código
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificación de tipos TypeScript
+        run: npm run type-check
+
+      - name: Linting del código
+        run: npm run lint
+
+      - name: Verificar formato de código
+        run: npm run format:check
+
+      - name: Tests unitarios e integración
+        run: npm run test:run
+
+      - name: Tests con cobertura
+        run: npm run test:coverage
+
+      - name: Subir reporte de cobertura
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Build de la aplicación
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  # Job de tests E2E (solo en ramas principales para optimizar recursos)
+  e2e:
+    name: Tests End-to-End
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build de la aplicación
+        run: npm run build
+
+      - name: Iniciar aplicación en background
+        run: |
+          npm run start &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Ejecutar tests E2E
+        run: npm run cypress:run
+        env:
+          CYPRESS_baseUrl: http://localhost:3000
+
+      - name: Subir screenshots de fallos
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
+
+      - name: Subir videos de tests
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          retention-days: 7
+
+  # Job de análisis de seguridad
+  security:
+    name: Análisis de Seguridad
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Auditoría de dependencias
+        run: npm audit --audit-level=moderate
+
+      - name: Verificar vulnerabilidades con Snyk
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # Job de deploy a preview (solo para PRs)
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Deploy a Vercel Preview
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          github-comment: true
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  # Job de status check consolidado
+  ci-status:
+    name: Estado CI
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: always()
+
+    steps:
+      - name: Verificar estado de jobs
+        run: |
+          echo "=== Resumen del Pipeline CI ==="
+
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "❌ Tests y calidad de código: FALLIDO"
+            exit 1
+          else
+            echo "✅ Tests y calidad de código: EXITOSO"
+          fi
+
+          if [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "⚠️ Análisis de seguridad: FALLIDO"
+            exit 1
+          else
+            echo "✅ Análisis de seguridad: EXITOSO"
+          fi
+
+          echo "=== Todos los checks críticos pasaron ==="

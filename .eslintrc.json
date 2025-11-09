@@ -1,0 +1,97 @@
+{
+  "extends": ["next/core-web-vitals", "prettier"],
+  "plugins": ["prettier"],
+  "rules": {
+    // Prettier integration
+    "prettier/prettier": "error",
+    // Code quality rules específicas para GondolApp
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    // Límites de código según las guías del proyecto
+    "max-lines": [
+      "error",
+      {
+        "max": 500,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "max-lines-per-function": [
+      "warn",
+      {
+        "max": 50,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "complexity": ["warn", 10],
+    "max-depth": ["warn", 4],
+    "max-nested-callbacks": ["warn", 3],
+    "max-params": ["warn", 4],
+    // React/Next.js specific rules
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    // PWA and mobile-first specific rules
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/aria-proptypes": "error",
+    "jsx-a11y/aria-unsupported-elements": "error",
+    "jsx-a11y/role-has-required-aria-props": "error",
+    "jsx-a11y/role-supports-aria-props": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true,
+    "serviceworker": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "overrides": [
+    {
+      "files": ["src/components/**/*.tsx"],
+      "rules": {
+        "max-lines-per-function": [
+          "warn",
+          {
+            "max": 100
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "cypress/**/*.ts"
+      ],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "max-lines-per-function": "off",
+        "max-nested-callbacks": "off",
+        "no-unused-vars": "off"
+      }
+    },
+    {
+      "files": ["*.config.js", "*.config.ts"],
+      "rules": {
+        "no-undef": "off"
+      }
+    },
+    {
+      "files": ["src/lib/db/utils.ts"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ]
+}

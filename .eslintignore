@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Package manager lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache directories
+.cache/
+.eslintcache
+
+# PWA files
+public/sw.js
+public/workbox-*.js
+sw.js
+
+# Generated files
+*.generated.*
+*.min.js
+*.d.ts
+
+# Config files that don't need linting
+*.config.js
+*.config.ts
+next-env.d.ts
+
+# Storybook
+.storybook/
+storybook-static/

@@ -61,16 +61,16 @@ description: Aplicación móvil progresiva que funciona sin internet, permitiend
 ```typescript
 // Detección progresiva de capacidades
 const initBarcodeScanner = async () => {
-  if ("BarcodeDetector" in window) {
+  if ('BarcodeDetector' in window) {
     // Usar API nativa (mejor rendimiento)
     const detector = new BarcodeDetector({
-      formats: ["ean_13", "ean_8", "code_128"],
+      formats: ['ean_13', 'ean_8', 'code_128'],
     });
-    return { type: "native", detector };
+    return { type: 'native', detector };
   } else {
     // Fallback a @zxing/browser
-    const { BrowserMultiFormatReader } = await import("@zxing/browser");
-    return { type: "zxing", detector: new BrowserMultiFormatReader() };
+    const { BrowserMultiFormatReader } = await import('@zxing/browser');
+    return { type: 'zxing', detector: new BrowserMultiFormatReader() };
   }
 };
 ```
@@ -107,7 +107,7 @@ const hapticFeedback = {
 };
 
 // Uso en componentes
-const handleSwipeRight = (item) => {
+const handleSwipeRight = item => {
   completeItem(item);
   hapticFeedback.complete(); // Confirma acción sin mirar
 };
@@ -131,11 +131,11 @@ const handleSwipeRight = (item) => {
 
 ```javascript
 // Backend: Cron job con timezone awareness
-const cron = require("node-cron");
-const moment = require("moment-timezone");
+const cron = require('node-cron');
+const moment = require('moment-timezone');
 
 cron.schedule(
-  "0 7 * * *",
+  '0 7 * * *',
   async () => {
     const subscriptions = await getActiveSubscriptions();
 
@@ -147,7 +147,7 @@ cron.schedule(
     }
   },
   {
-    timezone: "UTC", // Cron en UTC, conversión por usuario
+    timezone: 'UTC', // Cron en UTC, conversión por usuario
   }
 );
 ```
@@ -280,8 +280,8 @@ const generateSimpleSKU = (barcode: string, variantIndex: number): string => {
 
 // Ejemplo de uso
 const variants = [
-  { barcode: "1234567890123", type: "Entera" }, // SKU: 1234567890-A
-  { barcode: "1234567890124", type: "Descremada" }, // SKU: 1234567890-B
+  { barcode: '1234567890123', type: 'Entera' }, // SKU: 1234567890-A
+  { barcode: '1234567890124', type: 'Descremada' }, // SKU: 1234567890-B
 ];
 
 // Ejemplo de operación resiliente
@@ -291,7 +291,7 @@ const safeStockUpdate = async (variantId: string, quantity: number) => {
 
   while (attempt < maxRetries) {
     try {
-      await db.transaction("rw", [db.products, db.pendingSync], async () => {
+      await db.transaction('rw', [db.products, db.pendingSync], async () => {
         // Operaciones atómicas aquí
         await updateLocalStock(variantId, quantity);
         await queueMovementSync(variantId, quantity);
@@ -301,11 +301,11 @@ const safeStockUpdate = async (variantId: string, quantity: number) => {
       attempt++;
       if (attempt >= maxRetries) {
         // Log error y mostrar al usuario
-        console.error("Error crítico en actualización de stock:", error);
+        console.error('Error crítico en actualización de stock:', error);
         throw error;
       }
       // Retry con backoff exponencial
-      await new Promise((resolve) =>
+      await new Promise(resolve =>
         setTimeout(resolve, Math.pow(2, attempt) * 1000)
       );
     }
@@ -442,7 +442,7 @@ const safeStockUpdate = async (variantId: string, quantity: number) => {
 ```typescript
 // Validación antes de escribir a MongoDB
 const MovementSchema = z.object({
-  type: z.enum(["restock", "discard"]),
+  type: z.enum(['restock', 'discard']),
   productId: z.string().uuid(),
   variantId: z.string().uuid(),
   quantity: z.number().positive(),
@@ -451,7 +451,7 @@ const MovementSchema = z.object({
 });
 
 // En el endpoint POST /api/movements
-app.post("/api/movements", async (req, res) => {
+app.post('/api/movements', async (req, res) => {
   try {
     // Validar datos de la cola offline
     const validatedData = MovementSchema.parse(req.body);
@@ -462,7 +462,7 @@ app.post("/api/movements", async (req, res) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        error: "Datos inválidos de cola offline",
+        error: 'Datos inválidos de cola offline',
         details: error.errors,
       });
     }
@@ -532,7 +532,7 @@ app.post("/api/movements", async (req, res) => {
 
 ```typescript
 // Swipe para completar item - transacción atómica
-await db.transaction("rw", [db.restockLists, db.pendingSync], async () => {
+await db.transaction('rw', [db.restockLists, db.pendingSync], async () => {
   // 1. Marcar item como completado
   await db.restockLists.update(listId, {
     [`items.${itemIndex}.completed`]: true,
@@ -541,9 +541,9 @@ await db.transaction("rw", [db.restockLists, db.pendingSync], async () => {
 
   // 2. Agregar movimiento a cola de sync
   await db.pendingSync.add({
-    type: "movement",
+    type: 'movement',
     data: {
-      type: "restock",
+      type: 'restock',
       variantId: item.variantId,
       quantity: item.quantity,
       timestamp: new Date(),
@@ -552,11 +552,11 @@ await db.transaction("rw", [db.restockLists, db.pendingSync], async () => {
 
   // 3. Actualizar stock local
   await db.products
-    .where("variants.variantId")
+    .where('variants.variantId')
     .equals(item.variantId)
-    .modify((product) => {
+    .modify(product => {
       const variant = product.variants.find(
-        (v) => v.variantId === item.variantId
+        v => v.variantId === item.variantId
       );
       if (variant) variant.stock += item.quantity;
     });
@@ -834,8 +834,8 @@ await db.transaction("rw", [db.restockLists, db.pendingSync], async () => {
 
 ```typescript
 // Utilidades y cálculos puros
-describe("PredictionEngine", () => {
-  it("should calculate EES correctly", () => {
+describe('PredictionEngine', () => {
+  it('should calculate EES correctly', () => {
     const data = [10, 12, 8, 15];
     const result = calculateExponentialSmoothing(data, 0.3);
     expect(result).toBeCloseTo(33.6); // (11.25 * 3 * 1.2)
@@ -843,8 +843,8 @@ describe("PredictionEngine", () => {
 });
 
 // Servicios de negocio
-describe("InventoryService", () => {
-  it("should create restock suggestions", async () => {
+describe('InventoryService', () => {
+  it('should create restock suggestions', async () => {
     const mockRepo = createMockRepository();
     const service = new InventoryService(mockRepo);
     const suggestions = await service.getRestockSuggestions();
@@ -884,16 +884,16 @@ describe("useProductSync", () => {
 
 ```typescript
 // Flujos completos de usuario
-describe("Restock Flow", () => {
-  it("should create and complete restock list", () => {
-    cy.visit("/lists");
+describe('Restock Flow', () => {
+  it('should create and complete restock list', () => {
+    cy.visit('/lists');
     cy.get('[data-testid="create-list"]').click();
     cy.get('[data-testid="barcode-scanner"]').click();
-    cy.mockBarcodeResult("1234567890");
+    cy.mockBarcodeResult('1234567890');
     cy.get('[data-testid="add-to-list"]').click();
-    cy.get('[data-testid="complete-item"]').swipe("right");
+    cy.get('[data-testid="complete-item"]').swipe('right');
     cy.get('[data-testid="finish-list"]').click();
-    cy.url().should("include", "/lists/completed");
+    cy.url().should('include', '/lists/completed');
   });
 });
 ```
@@ -905,17 +905,17 @@ describe("Restock Flow", () => {
 ```typescript
 // tests/factories/productFactory.ts
 export const createMockProduct = (overrides = {}) => ({
-  _id: "prod-123",
-  baseProduct: "Leche Milex",
-  brand: "Milex",
+  _id: 'prod-123',
+  baseProduct: 'Leche Milex',
+  brand: 'Milex',
   category: {
-    level1: "Lácteos",
-    level2: "Leches",
+    level1: 'Lácteos',
+    level2: 'Leches',
   },
   variants: [
     createMockVariant({
-      sku: "MILEX-DESC-1L",
-      barcode: "1234567890",
+      sku: 'MILEX-DESC-1L',
+      barcode: '1234567890',
       stock: 10,
       stockMinimo: 20,
       ...overrides,
@@ -956,37 +956,37 @@ export const createMockProduct = (overrides = {}) => ({
 ```typescript
 // tests/utils/networkMock.ts
 export const mockOffline = () => {
-  Object.defineProperty(navigator, "onLine", {
+  Object.defineProperty(navigator, 'onLine', {
     writable: true,
     value: false,
   });
-  window.dispatchEvent(new Event("offline"));
+  window.dispatchEvent(new Event('offline'));
 };
 
 export const mockOnline = () => {
-  Object.defineProperty(navigator, "onLine", {
+  Object.defineProperty(navigator, 'onLine', {
     writable: true,
     value: true,
   });
-  window.dispatchEvent(new Event("online"));
+  window.dispatchEvent(new Event('online'));
 };
 ```
 
 #### Tests de Sincronización
 
 ```typescript
-describe("Offline Functionality", () => {
-  it("should queue operations when offline", async () => {
+describe('Offline Functionality', () => {
+  it('should queue operations when offline', async () => {
     mockOffline();
     const service = new SyncService();
     await service.createProduct(mockProduct);
 
     const queue = await getOfflineQueue();
     expect(queue).toHaveLength(1);
-    expect(queue[0].operation).toBe("POST");
+    expect(queue[0].operation).toBe('POST');
   });
 
-  it("should sync queued operations when online", async () => {
+  it('should sync queued operations when online', async () => {
     mockOnline();
     const service = new SyncService();
     await service.processQueue();
@@ -1071,8 +1071,8 @@ jobs:
 
 ```typescript
 // Utilidades y cálculos puros
-describe("PredictionEngine", () => {
-  it("should calculate EES correctly", () => {
+describe('PredictionEngine', () => {
+  it('should calculate EES correctly', () => {
     const data = [10, 12, 8, 15];
     const result = calculateExponentialSmoothing(data, 0.3);
     expect(result).toBeCloseTo(33.6); // (11.25 * 3 * 1.2)
@@ -1080,8 +1080,8 @@ describe("PredictionEngine", () => {
 });
 
 // Servicios de negocio
-describe("InventoryService", () => {
-  it("should create restock suggestions", async () => {
+describe('InventoryService', () => {
+  it('should create restock suggestions', async () => {
     const mockRepo = createMockRepository();
     const service = new InventoryService(mockRepo);
     const suggestions = await service.getRestockSuggestions();
@@ -1121,16 +1121,16 @@ describe("useProductSync", () => {
 
 ```typescript
 // Flujos completos de usuario
-describe("Restock Flow", () => {
-  it("should create and complete restock list", () => {
-    cy.visit("/lists");
+describe('Restock Flow', () => {
+  it('should create and complete restock list', () => {
+    cy.visit('/lists');
     cy.get('[data-testid="create-list"]').click();
     cy.get('[data-testid="barcode-scanner"]').click();
-    cy.mockBarcodeResult("1234567890");
+    cy.mockBarcodeResult('1234567890');
     cy.get('[data-testid="add-to-list"]').click();
-    cy.get('[data-testid="complete-item"]').swipe("right");
+    cy.get('[data-testid="complete-item"]').swipe('right');
     cy.get('[data-testid="finish-list"]').click();
-    cy.url().should("include", "/lists/completed");
+    cy.url().should('include', '/lists/completed');
   });
 });
 ```
@@ -1142,37 +1142,37 @@ describe("Restock Flow", () => {
 ```typescript
 // tests/utils/networkMock.ts
 export const mockOffline = () => {
-  Object.defineProperty(navigator, "onLine", {
+  Object.defineProperty(navigator, 'onLine', {
     writable: true,
     value: false,
   });
-  window.dispatchEvent(new Event("offline"));
+  window.dispatchEvent(new Event('offline'));
 };
 
 export const mockOnline = () => {
-  Object.defineProperty(navigator, "onLine", {
+  Object.defineProperty(navigator, 'onLine', {
     writable: true,
     value: true,
   });
-  window.dispatchEvent(new Event("online"));
+  window.dispatchEvent(new Event('online'));
 };
 ```
 
 #### Tests de Sincronización
 
 ```typescript
-describe("Offline Functionality", () => {
-  it("should queue operations when offline", async () => {
+describe('Offline Functionality', () => {
+  it('should queue operations when offline', async () => {
     mockOffline();
     const service = new SyncService();
     await service.createProduct(mockProduct);
 
     const queue = await getOfflineQueue();
     expect(queue).toHaveLength(1);
-    expect(queue[0].operation).toBe("POST");
+    expect(queue[0].operation).toBe('POST');
   });
 
-  it("should sync queued operations when online", async () => {
+  it('should sync queued operations when online', async () => {
     mockOnline();
     const service = new SyncService();
     await service.processQueue();
